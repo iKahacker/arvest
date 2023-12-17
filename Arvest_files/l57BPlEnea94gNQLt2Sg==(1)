@@ -1,0 +1,246 @@
+//CustomJS LIVE, Arvest
+//oct 15 250pm 2021 TP
+if(!(IMI.CustomJS && IMI.CustomJS.customJSisLoaded)){
+    (function(){
+
+         IMI.CustomJS = {
+            triggeredIntercepts:function(){
+                setTimeout(function(){
+                    var imm = IMI.CustomJS.mods;
+                    if(imm.resetFeedbackHeight){
+                        imm.resetFeedbackHeight();
+                    }
+                },1000);
+            },
+            customJSisLoaded:true,
+            afterInterceptsLoaded : function(){
+                var imm = IMI.CustomJS.mods;
+
+                if(imm.setFeedbackWidth){
+                   // imm.setFeedbackWidth();
+                }
+                if(imm.closeFeedbackAfterCompletion){
+                    imm.closeFeedbackAfterCompletion(3);
+                }
+                
+                
+            },
+            'mods':{
+                resetFeedbackHeight:function(visId){
+                    var visualId = visId || "all";
+
+                    for(var c=0; c<IMI.Intercepts.length; ++c){
+                        if(IMI.Intercepts[c].visual && IMI.Intercepts[c].visual.type && IMI.Intercepts[c].visual.type.name == "FEEDBACK_TAB"){
+                            if(visualId == "all"){
+                                resetHeight(IMI.Intercepts[c].visual);
+                            }
+                            else{
+                                if(IMI.Intercepts[c].visual.id == visId){
+                                    resetHeight(IMI.Intercepts[c].visual);
+                                    break;
+                                }
+                            }
+                        }
+                         
+                    }
+                    function resetHeight(visual){
+                        // get section and sidebar element dimensions 
+                        var feedbackSecElement = IMI.InterceptElemRefs.getRef(visual.id, IMI.VisualTypes.FEEDBACKTAB, 'feedbackSec');
+                        var verticalInput = IMI.JSUtil.parseVerticalInput(visual.verticalPosition);
+                        
+                        
+                        var surveyBodyHeight = IMI.JSUtil.getSurveyBodyHeight(feedbackSecElement);
+                        var tabWidth = IMI.JSUtil.getTabWidth(feedbackSecElement);
+                        var tabHeight = IMI.JSUtil.getTabHeight(feedbackSecElement);
+                        var windowHeight = IMI.JSUtil.getWindowHeight(feedbackSecElement);
+
+                        // calculate and apply Body position
+                        var sectionAlign = IMI.JSUtil.sectionAlignCalc(verticalInput, windowHeight, surveyBodyHeight);
+                        feedbackSecElement.children[1].style.top = (sectionAlign + "px");
+
+                        // calculate and apply Tab position
+                        var sidebarAlign = IMI.JSUtil.sidebarAlignCalc(verticalInput, windowHeight, tabWidth, tabHeight);
+                        feedbackSecElement.children[0].style.top = (sidebarAlign + "px");
+                        
+                    }
+                },
+                setCookie : function(n, v, d, e) {
+                    var de = new Date;
+                    de.setTime(de.getTime() + e * 1000);
+                    document.cookie = n + "=" + escape(v) + ((e == null) ? "" : ("; expires=" + de.toGMTString())) + "; path=/" + ((d == null) ? "" : (";domain=" + d));
+                },
+                feedbackTabAction:function(action, int_id){
+                    function dispatchEvent(elm, evtType) { if(elm){var evt = null;evtType = evtType || 'click';if(document.createEvent) { evt = document.createEvent('MouseEvents'); if(elm && elm.dispatchEvent && evt && evt.initMouseEvent) { evt.initMouseEvent(evtType,true,true,document.defaultView,1, 0, 0,0,0,false,false,false,false,0,null); elm.dispatchEvent(evt); }} else if (elm[evtType]){elm[evtType]();}}};
+                    var feedbackArea, elem, elemAction;
+                    var sections = document.getElementsByTagName("section");
+                    var visId=0,subVisId=0;
+                    if(int_id){
+                        for(var c=0; c<IMI.Intercepts.length; ++c){
+                            if(IMI.Intercepts[c].id == int_id){
+                                if(IMI.Intercepts[c].visual){
+                                    visId = IMI.Intercepts[c].visual.id
+                                }
+                                if(IMI.Intercepts[c].visual.subVisual){
+                                    subVisId = IMI.Intercepts[c].visual.subVisual.id
+                                }
+								break;
+                            }
+                        }
+                    }
+                    for(var z=0; z<sections.length; ++z){
+                        elemAction=null;
+                        if(sections[z].id.indexOf("_im_feedbackTab__") > -1){
+                            feedbackArea = sections[z];
+                            elem = feedbackArea.getElementsByTagName("sidebar")[0];
+                            if(elem && feedbackArea &&  feedbackArea.style.visibility && feedbackArea.style.visibility.toLowerCase().indexOf("visible") > -1 && (!int_id || (int_id && visId && feedbackArea.id.indexOf(visId) > -1))){
+                                if(action == "close"){
+                                    //embed feedback is open
+                                    if(elem.style.right && elem.style.right != "0px"){
+                                        elemAction=elem;
+                                    }
+                                    else if(elem.style.left && elem.style.left != "0px"){
+                                        elemAction=elem;
+                                    }
+                                }
+                                else if(action == "open"){
+                                    //embed feedback is closed
+                                    if(elem.style.right && elem.style.right == "0px"){
+                                        elemAction=elem;
+                                    }
+                                    else if(elem.style.left && elem.style.left == "0px"){
+                                        elemAction=elem;
+                                    }
+                                    else if(!elem.style.right && !elem.style.left){
+                                        elemAction=elem;
+                                    }
+                                }
+                            }
+                            
+                        }
+                        else if(sections[z].id.indexOf("_im_iframe_overlay__") > -1){
+                            feedbackArea = sections[z];
+                            if(feedbackArea){
+                                //iframe feedback is open
+                                if(action == "close" && feedbackArea.style.visibility && feedbackArea.style.visibility.toLowerCase().indexOf("visible") > -1 && (!int_id || (int_id && subVisId && feedbackArea.id.indexOf(subVisId) > -1))){
+                                    elemAction = feedbackArea.querySelector("button#intercept_close");
+                                }
+                            }
+                        }
+                        if(elemAction){
+                            dispatchEvent(elemAction);
+                            break;
+                        }
+                    }
+                },
+                closeFeedbackAfterCompletion:function(seconds){
+                    seconds = seconds || 10;
+                    function receivePostMessage(event){
+                        var payload;
+
+                        var originIsGood=false;
+                        if(event.origin && event.origin.indexOf("inmoment") > -1){
+                            originIsGood=true;
+                        }
+                        if (originIsGood){
+                            IMI.CustomJS.log('messengerParent: receivePostMessage');    
+                            if(event.data && typeof(event.data)==="string"){
+                                try{
+                                    payload=JSON.parse(event.data);
+                                }
+                                catch(e){
+    
+                                }
+                                IMI.CustomJS.log(payload);
+                                if(payload){
+                                    
+                                    if(payload.messageType == "Survey Complete"){
+                                        if(IMI.CustomJS.mods.events){
+                                            IMI.CustomJS.mods.events.emit("survey_complete");
+                                        }
+                                        if(IMI.CustomJS.mods.feedbackTabAction){
+                                            setTimeout(function(){
+                                                IMI.CustomJS.mods.feedbackTabAction("close");
+                                            },seconds*1000);
+                                        }
+                                    }
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;		
+                    }   
+                    window.addEventListener("message", receivePostMessage, false);
+                },
+                setFeedbackWidth:function(width, skipSizeCheck){
+                    var imm = IMI.CustomJS.mods;
+                    IMI.CustomJS.feedbackWidth = width || 545;
+                    IMI.CustomJS.skipSizeCheck = skipSizeCheck || false;
+                    if(imm.addStyle && IMI.AnimationUtil){
+                      //  imm.addStyle("#_im_feedbackTab__1526 section{width:500px !important;}");
+                        IMI.AnimationUtil.slideOutReverse = function(obj, displaceLeftBy) {
+                            
+                            //increase width of feedback tab, default witdh is 319
+                            var oldWidth=319,newWidth=IMI.CustomJS.feedbackWidth || 545,elemSection;
+                            if(!IMI.CustomJS.skipSizeCheck && screen.width < newWidth + 10){
+                                newWidth = screen.width - 40;
+                                //newWidth = oldWidth;
+                            }
+                            var neutralPos = '0px';
+                            var extPos = newWidth + displaceLeftBy +'px';
+                            
+                            if (obj) {
+                                var elem = obj;
+                                if (obj.target) {
+                                    elem = obj.target;
+                                }
+
+                                if(elem && elem.parentNode){
+                                    elemSection = elem.parentNode.querySelector("section");
+                                }
+                                //opening
+                                if (IMI.AnimationUtil.slideOutStatusReverse === 0) {
+                                    elem.style.transition = '0.5s';
+                                    elem.style.right = extPos;
+                                    IMI.AnimationUtil.slideOutStatusReverse = 1;
+                                    if(elemSection){
+                                        elemSection.style.width=newWidth + "px";
+                                    }
+                                    
+                                }
+                                //closing
+                                else {
+                                    elem.style.transition = '0.5s';
+                                    elem.style.right = neutralPos;
+                                    IMI.AnimationUtil.slideOutStatusReverse = 0;
+                                    IMI.JSUtil.setInterceptClosedCookie();
+                                    if(elemSection){
+                                        elemSection.style.width=oldWidth + "px";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                addStyle:function(css){
+                    var head = document.getElementsByTagName("head")[0];
+                    var style = document.createElement("style");
+                    style.type = 'text/css';
+                    style.appendChild(document.createTextNode(css));
+                    if(head){
+                        head.appendChild(style);
+                    }
+                }
+            },
+            log:function(str, xtra, showLog){
+                if(IMI.CustomJS.debug || showLog){
+                    if(xtra){console.log('%c'+str, xtra);}
+                    else{
+                        if(typeof(str)=="string"){console.log('%c'+str,'color: #E0E0B6; background: #0137A3;');}
+                        else {console.log('Object value of:',str);}
+                    }
+                } 
+            }            	
+        }
+       
+    })();
+}

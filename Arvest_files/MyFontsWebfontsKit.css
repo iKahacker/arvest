@@ -1,0 +1,38 @@
+/* @license
+ * MyFonts Webfont Build ID 2546231, 2013-05-02T12:57:30-0400
+ *
+ * The fonts listed in this notice are subject to the End User License
+ * Agreement(s) entered into by the website owner. All other parties are
+ * explicitly restricted from using the Licensed Webfonts(s).
+ *
+ * You may obtain a valid license at the URLs below.
+ *
+ * Webfont: Futura Book by Bitstream
+ * URL: http://www.myfonts.com/fonts/bitstream/futura/book/
+ *
+ * Webfont: Futura Medium by Bitstream
+ * URL: http://www.myfonts.com/fonts/bitstream/futura/medium/
+ *
+ * Webfont: Futura Bold by Bitstream
+ * URL: http://www.myfonts.com/fonts/bitstream/futura/bold/
+ *
+ *
+ * License: http://www.myfonts.com/viewlicense?type=web&buildid=2546231
+ * Webfonts copyright: Copyright 1990-2003 Bitstream Inc. All rights reserved.
+ *
+ * © 2013 MyFonts Inc
+*/
+
+
+/* @import must be at top of file, otherwise CSS will not work */
+/*
+@import url("//hello.myfonts.net/count/26da37");
+*/
+
+@font-face {font-family: 'FuturaBT-Book';src: url('webfonts/26DA37_0_0.eot');src: url('webfonts/26DA37_0_0.eot?#iefix') format('embedded-opentype'),url('webfonts/26DA37_0_0.woff') format('woff'),url('webfonts/26DA37_0_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'FuturaBT-Medium';src: url('webfonts/26DA37_1_0.eot');src: url('webfonts/26DA37_1_0.eot?#iefix') format('embedded-opentype'),url('webfonts/26DA37_1_0.woff') format('woff'),url('webfonts/26DA37_1_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'FuturaBT-Bold';src: url('webfonts/26DA37_2_0.eot');src: url('webfonts/26DA37_2_0.eot?#iefix') format('embedded-opentype'),url('webfonts/26DA37_2_0.woff') format('woff'),url('webfonts/26DA37_2_0.ttf') format('truetype');}
